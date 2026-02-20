@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="finalBC.png" width="400">
+</p>
+
+
 # TODOS:
 1) transactions:
     - Merkle tree where the root is stored in the block.h
