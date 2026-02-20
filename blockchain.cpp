@@ -64,5 +64,5 @@ double Blockchain::getMiningTime() const {
         result = totalTime / 60.0;
     }
 
-    return (result * 100.0) / 100.0; 
+    return (result * 100.0) / 100.0;  //for the digits
 }
