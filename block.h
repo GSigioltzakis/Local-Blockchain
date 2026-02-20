@@ -9,7 +9,7 @@ class Block {
 public:
     int index;
     long long timestamp;
-    std::string data;
+    std::string data; //must change to a vector of transactions later, for now we just use a string to represent the data in the block
     std::string prevHash;
     std::string hash;
     int nonce; //proof of work
