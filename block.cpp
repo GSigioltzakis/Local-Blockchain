@@ -21,6 +21,7 @@ Block::Block(int idx, const std::string& d, const std::string& prev) {
     hash = calculateHash(); //calling fucntion for hash calculation when block is created
 }
 
+
 /*
     The calculateHash function computes the hash of the block's contents using SHA-256. It combines
     the block's index, timestamp, data, previous hash, and nonce into a single string, which is then
