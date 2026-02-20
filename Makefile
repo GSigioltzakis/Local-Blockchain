@@ -1,13 +1,14 @@
 CXX = g++
-
-CXXFLAGS = -std=c++17 -Wall -g
-
+# Added -Iinclude so the compiler looks in the include/ folder for .h files
+CXXFLAGS = -std=c++17 -Wall -g -Iinclude
 LDFLAGS = -lssl -lcrypto
 
 TARGET = a
 
-SRCS = main.cpp block.cpp blockchain.cpp
+# Prefix your source files with the src/ directory
+SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp
 
+# This automatically transforms src/file.cpp into src/file.o
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
@@ -15,7 +16,8 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-%.o: %.cpp
+# This pattern rule now handles files inside the src/ directory
+src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
