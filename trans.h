@@ -3,7 +3,7 @@
 
 #include <string>
 
-struct Transaction {
+struct Transaction { //will change to a class later, for now we just use a struct to represent a transaction (maybe)
     std::string sender;
     std::string receiver;
     double amount;
