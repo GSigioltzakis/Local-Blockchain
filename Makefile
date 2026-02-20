@@ -4,7 +4,6 @@ CXXFLAGS = -std=c++17 -Wall -g
 
 LDFLAGS = -lssl -lcrypto
 
-# Target executable name
 TARGET = a
 
 SRCS = main.cpp block.cpp blockchain.cpp
