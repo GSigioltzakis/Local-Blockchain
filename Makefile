@@ -3,10 +3,10 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -g -Iinclude
 LDFLAGS = -lssl -lcrypto
 
-TARGET = a
+TARGET = al
 
 # Prefix your source files with the src/ directory
-SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp
+SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp src/merkle.cpp
 
 # This automatically transforms src/file.cpp into src/file.o
 OBJS = $(SRCS:.cpp=.o)
@@ -21,7 +21,7 @@ src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) merkle_trees.log
 
 run: all
 	./$(TARGET)
