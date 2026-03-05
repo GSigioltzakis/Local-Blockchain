@@ -5,7 +5,8 @@
 
 # TODOS:
 1) transactions:
-    - Merkle tree where the root is stored in the block.h
+    - [DONE] Merkle tree where the root is stored in the block.h
+    - Implement the Merkle.cpp && Merkle.h to the other files and Makefile.
     - in block.h replace "std::string data", with a vector (used for transactions.)
 2) minting:
     - bta...
@@ -27,6 +28,10 @@ from the files blockchain.cpp/h:
 ## 3. small transactions
 from the files trans.cpp/h:
 1. We create a struct Transaction with a sender and receiver vars. and a helper function toString() (prefixxed) to turn it onto a string and use it to be hashed by the block.
+2. Merkle tree implementation: we created a new utility hash function, to convert them into strings and (before that) store them in a tree. As we have all the start up (lets say), hashes on the current (last) level of the tree, we hash the already hashed items. This way we are going up a level combining the hashes, until we reach 1 final hash name Mroot (merkle root) that stores the info of the root that tells us that all transactions are included in the block, and any change to a transaction would change the root hash, making it easy to detect tampering.
+
+
+
 
 ## Output of: 18/2/2026
 # using SHA-256:
