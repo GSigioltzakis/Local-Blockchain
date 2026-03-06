@@ -4,6 +4,7 @@
 
 # TODOS:
 1) Small cleanup of the merkle tree situation (clean code), and then procced to what ever occurs.
+2) *SOS* Signature verification (ECDSA)
 2) minting:
     - TBA...
 
