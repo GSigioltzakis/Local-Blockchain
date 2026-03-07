@@ -1,8 +1,10 @@
 #include "block.h"
+#include "merkle.h"
 #include <sstream>
 #include <iomanip>
 #include <openssl/sha.h>
 #include <functional>
+#include <fstream>
 
 /*
     in the block function, the constructor initializes the block's properties including index, data,
@@ -12,9 +14,9 @@
     process to find a valid hash that meets the difficulty requirement.
 
 */
-Block::Block(int idx, const std::string& d, const std::string& prev) {
+Block::Block(int idx, const std::vector<Transaction>& txs, const std::string& prev) {
     index = idx;
-    data = d;
+    transactions = txs;
     prevHash = prev;
     timestamp = std::time(nullptr);
     nonce = 0; //nonce is used for mining, it starts at 0 and will be incremented until we find a valid hash.
@@ -29,7 +31,10 @@ Block::Block(int idx, const std::string& d, const std::string& prev) {
 */
 std::string Block::calculateHash() const {
     std::stringstream ss;
-    ss << index << timestamp << data << prevHash << nonce;
+    // incorporate Merkle root of transactions into the hash
+    // avoid verbose prints during repeated hash calculations (mining)
+    std::string mroot = MerkleTree::buildRoot(transactions, false);
+    ss << index << timestamp << mroot << prevHash << nonce;
     std::string input = ss.str(); //the input string is a combination of all the block's properties that we want to hash together
 
     //---SHA-256 implementation using OpenSSL library
@@ -58,11 +63,29 @@ std::string Block::calculateHash() const {
 */
 void Block::mineBlock(int difficulty) {
     std::string target(difficulty, '0');
-    //we keep hashing until we find a hash that starts with enough zeros
+    // we keep hashing until we find a hash that starts with enough zeros
+    // throttle terminal updates to reduce I/O overhead (print every N attempts)
+    const int PRINT_EVERY = 1000;
     while (hash.substr(0, difficulty) != target) {
         nonce++;
         hash = calculateHash();
+        if (nonce % PRINT_EVERY == 0) {
+            std::cout << "\rBlock(after nonce) MINED with hash: " << hash << std::flush;
+        }
     }
+    // final print of discovered hash
+    std::cout << "\rBlock MINED with hash: " << hash << std::endl;
+}
 
-    printf("Block MINED with Hash: %s\n", hash.c_str());
+void Block::printMerkleTree() const {
+    if (transactions.empty()) {
+        return;
+    }
+    // write Merkle visualization to a log file (append)
+    std::ofstream ofs("merkle_trees.log", std::ios::app);
+    if (!ofs) return;
+    ofs << "Merkle Tree for block " << index << ":\n";
+    std::string root = MerkleTree::buildRoot(transactions, true, ofs);
+    ofs << "\nMerkle Root: " << root << "\n\n";
+    ofs.close();
 }
