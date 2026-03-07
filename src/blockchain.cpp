@@ -4,12 +4,12 @@
 
 
 Blockchain::Blockchain() {
-    _chain.emplace_back(Block(0, {}, "0")); //start with index 0 and a dummy previous hash of "0"
+    _chain.emplace_back(Block(0, std::vector<Transaction>{}, "0")); //start with index 0 and a dummy previous hash of "0"
 /* 
     Difficulty 4 means the hash must start with "0000", might change later due to cryptographic performance on different machines.
     On a modern laptop, this takes < 1 second.
 */
-    _difficulty = 6; //with difficulty 8, it takes around 10-20 seconds to mine a block.
+    _difficulty = 5; //with difficulty 8, it takes around 10-20 seconds to mine a block.
 }
 
 
@@ -18,16 +18,19 @@ Blockchain::Blockchain() {
     retrieves the hash of the last block to link it properly, creates a new block, mines it using the proof-of-work algorithm,
     and finally adds it to the chain.
 */
-void Blockchain::addBlock(std::string data) {
+void Blockchain::addBlock(const std::vector<Transaction>& txs) {
 
     std::string lastHash = _chain.back().hash;
-    Block newBlock(_chain.size(), data, lastHash); //take it from the block constructor
+    Block newBlock(_chain.size(), txs, lastHash); //take it from the block constructor
 
     //mine: Proof of Work
-    std::cout << "Mining block[" << newBlock.index << "] ..." << std::endl;
+    std::cout << "Mining block[" << newBlock.index << "]..." << std::endl;
     newBlock.mineBlock(_difficulty);
 
-    _chain.push_back(newBlock); //to the vector named _chain, we push the new block that we just mined.
+    // After mining, push the block and print the Merkle tree once for visual inspection
+    _chain.push_back(newBlock);
+    // print merkle visual for this newly mined block
+    _chain.back().printMerkleTree();
 }
 
 bool Blockchain::isChainValid() const {
@@ -53,14 +56,10 @@ bool Blockchain::isChainValid() const {
 double Blockchain::getMiningTime() const {
     if (_chain.size() < 2) return 0.0;
 
-    double totalTime = 0.0;
-    for (size_t i = 1; i < _chain.size(); i++) {
-        const Block& currentBlock = _chain[i];
-        const Block& prevBlock = _chain[i - 1];
-        totalTime += difftime(currentBlock.timestamp, prevBlock.timestamp);
-    }
-    double result = totalTime;
-    if (totalTime > 60.0) {
-        result = totalTime / 60.0;
-    }
+    // total time from genesis (index 0) to last block, in minutes
+    const Block& first = _chain.front();
+    const Block& last = _chain.back();
+    double totalSeconds = difftime(last.timestamp, first.timestamp);
+    double totalMinutes = totalSeconds / 60.0;
+    return totalMinutes;
 }
