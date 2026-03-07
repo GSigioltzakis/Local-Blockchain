@@ -8,7 +8,7 @@ class Blockchain {
 public:
     Blockchain();
 
-    void addBlock(std::string data);
+    void addBlock(const std::vector<Transaction>& txs);
     bool isChainValid() const;
     void printChain() const;
     double getMiningTime() const; 
