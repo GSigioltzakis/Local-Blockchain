@@ -13,9 +13,8 @@ struct Transaction { //will change to a class later, for now we just use a struc
     std::string dataMsg; //the message that will be signed by the sender's private key, and verified by the recipient's public key
 
     //helper to turn the transaction into a string for hashing
-    std::string toString() const {
-        return sender_addr + recipient_addr + std::to_string(amount);
-    }
+    std::string toString() const;
+    bool isValid() const;
 };
 
 #endif
