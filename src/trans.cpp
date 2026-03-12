@@ -17,7 +17,5 @@ bool Transaction::isValid() const {
     if (sender_addr.empty() || recipient_addr.empty() || amount <= 0) {
         return false;
     }
-    
-    // In the next step, we will add the ECDSA signature check here.
     return true; 
 }

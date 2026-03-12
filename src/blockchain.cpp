@@ -9,7 +9,7 @@ Blockchain::Blockchain() {
     Difficulty 4 means the hash must start with "0000", might change later due to cryptographic performance on different machines.
     On a modern laptop, this takes < 1 second.
 */
-    _difficulty = 5; //with difficulty 8, it takes around 10-20 seconds to mine a block.
+    _difficulty = 4; //with difficulty 8, it takes around 10-20 seconds to mine a block.
 }
 
 
