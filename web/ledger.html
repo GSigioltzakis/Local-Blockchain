@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immutable Ledger</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: left;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px; /* Tightened gap */
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; }
+        
+        button {
+            background: transparent; border: 1px solid #212529; color: #212529;
+            padding: 6px 12px; font-weight: bold; cursor: pointer; border-radius: 4px;
+        }
+        
+        button:hover { background: #212529; color: #fff; }
+
+        .block-card {
+            background: #fff; border: 1px solid #e9ecef; border-radius: 6px;
+            padding: 12px 16px; margin-bottom: 10px;
+        }
+
+        .block-header { 
+            display: flex; justify-content: space-between; 
+            margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #e9ecef;
+        }
+        
+        .block-title { font-weight: bold; color: #d81b60; }
+        .block-time { font-size: 0.8rem; color: #6c757d; }
+
+        .data-grid {
+            display: grid; grid-template-columns: 100px 1fr; 
+            gap: 5px; font-size: 0.85rem;
+        }
+
+        .label { font-weight: bold; color: #6c757d; }
+        .value { font-family: monospace; color: #212529; word-break: break-all; }
+        .hash { color: #d81b60; }
+        
+        .genesis .block-title { color: #6c757d; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>|| Ledger History ||</h1>
+            <button onclick="window.location.href='index.html'">← Back to the chain</button>
+        </header>
+
+        <div class="block-card">
+            <div class="block-header">
+                <span class="block-title">Block #2</span>
+                <span class="block-time">Mined: Just now</span>
+            </div>
+            <div class="data-grid">
+                <span class="label">Nonce</span><span class="value">1054302</span>
+                <span class="label">Transactions</span><span class="value">4</span>
+                <span class="label">Merkle Root</span><span class="value">f7b9c2a118d3e74c81a9d8e4f</span>
+                <span class="label">Block Hash</span><span class="value hash">00000a3f9e2b4c1d7e8f9a0b1c2d3e4f5a6b7c8d9e0f</span>
+                <span class="label">Prev Hash</span><span class="value">0000092c4b8e1f0a2b3c4d5e6f7a8b9c0d1e2f3a4b5c</span>
+            </div>
+        </div>
+
+        <div class="block-card">
+            <div class="block-header">
+                <span class="block-title">Block #1</span>
+                <span class="block-time">Mined: 2 mins ago</span>
+            </div>
+            <div class="data-grid">
+                <span class="label">Nonce</span><span class="value">843112</span>
+                <span class="label">Transactions</span><span class="value">4 (Seshy -> Bob...)</span>
+                <span class="label">Merkle Root</span><span class="value">e2a8c9fbb2719d3e8a11bd8</span>
+                <span class="label">Block Hash</span><span class="value hash">0000092c4b8e1f0a2b3c4d5e6f7a8b9c0d1e2f3a4b5c</span>
+                <span class="label">Prev Hash</span><span class="value">00000000000000000000000000000000000000000000</span>
+            </div>
+        </div>
+
+        <div class="block-card genesis">
+            <div class="block-header">
+                <span class="block-title">Block #0 (Genesis)</span>
+                <span class="block-time">Mined: System Start</span>
+            </div>
+            <div class="data-grid">
+                <span class="label">Transactions</span><span class="value">0</span>
+                <span class="label">Block Hash</span><span class="value">00000000000000000000000000000000000000000000</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
