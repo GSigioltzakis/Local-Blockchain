@@ -21,6 +21,8 @@ public:
     const std::string& getDataMsg() const { return dataMsg; }
 
     std::string toString() const;
+    std::string sign(const std::string& privateKeyHex);
+
     bool isValid() const;
 
 private:
