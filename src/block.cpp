@@ -1,5 +1,5 @@
-#include "block.h"
-#include "merkle.h"
+#include "../include/block.h"
+#include "../include/merkle.h"
 #include <sstream>
 #include <iomanip>
 #include <openssl/sha.h>

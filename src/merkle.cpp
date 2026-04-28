@@ -1,4 +1,4 @@
-#include "merkle.h"
+#include "../include/merkle.h"
 #include <openssl/sha.h>
 #include <sstream>
 #include <iomanip>

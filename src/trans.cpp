@@ -1,6 +1,12 @@
-#include "trans.h"
+#include "../include/trans.h"
 #include <iomanip>
 #include <sstream>
+#include <iostream>
+#include <openssl/sha.h>
+#include <openssl/ec.h>
+#include <openssl/ecdsa.h>
+#include <openssl/obj_mac.h>
+#include <openssl/bn.h>
 
 
 std::string Transaction::toString() const {
