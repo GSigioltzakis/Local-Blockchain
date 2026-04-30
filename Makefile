@@ -1,14 +1,11 @@
 CXX = g++
-# Added -Iinclude so the compiler looks in the include/ folder for .h files
-CXXFLAGS = -std=c++17 -Wall -g -Iinclude
+CXXFLAGS = -std=c++17 -Wall -g -Iinclude -Wno-deprecated-declarations
 LDFLAGS = -lssl -lcrypto
 
 TARGET = al
 
-# Prefix your source files with the src/ directory
-SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp src/merkle.cpp
+SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp src/merkle.cpp src/wallet.cpp
 
-# This automatically transforms src/file.cpp into src/file.o
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
@@ -21,7 +18,7 @@ src/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET) merkle_trees.log
+	rm -f $(OBJS) $(TARGET) merkle_trees.log wallets.log
 
 run: all
 	./$(TARGET)
