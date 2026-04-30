@@ -3,14 +3,15 @@
 </p>
 
 # TODOS:
-1) *SOS* Signature verification (ECDSA)
-2) implement ECDSA in code, hands on
-0) minting:
-    - TBA...
+1) make a diagram to connect: transactions/network/ledger etc...
+2) store the addresses and the transactions are "real"
+3) minting reward from blockmine
 
 # DONES:
 1) Signatures:
     - read Theory, wrote READme
+2) *SOS* Signature verification (ECDSA)
+3) implement ECDSA in code, hands on
 
 
 # Very simple blockchain creation - tzak
@@ -50,6 +51,7 @@ From the files `trans.cpp` and `trans.h`:
   - If p = 0.1 ms, difficulty 6 adds ≈ 1.68s to the total mining time.
 
 ## 4. Signature Verifications - ECDSA
+(small note: i use ECDSA signature and address generation instead of RSA only for the space (byte wise))
 Before implementing anything, must understand how the openssl library works. Ive generated a small test file to implement a single signature using various libraries from openssl. In general tho, the steps for a correct signature verifications are:
 1. We have: a constant *prime* number `n` and a generator point `G` (where G={x, y}). 
 2. From those two now we need to generate a: `privKey` and a `pubKey`. The *private key* is not that hard to create as with a mathimatical "formula" we generate it as a random integer in the range of [1, n-1]. The *public key* is a bit more complex because we add an extra step. To find the public key we must multiply the private key with the generator point G: **`pubKey = privKey * G`**. That is called EC point multiplication (EC:Elliptic Curve).
@@ -76,6 +78,39 @@ Before implementing anything, must understand how the openssl library works. Ive
         Public Key (YOUR ADDRESS):
     04AB9F9F7F8E24084E27B43BE8B0DBBD7EF88DD6B99171D643853973A3EF62A57AB238A8BC1722971BE6F9032051BB421A6905749EDC1AA9DA8D17E67A66821B7C
     ```
+5. ### code implementation
+- [x] In `trans.cpp` first of all we need encryption as we convert the transaction's string, hashed and we convert that hash to hex due to OpenSSL library.
+- [x] Also in `trans.h` 2 new methods have been added to the constructor of the transactions. Those methods are: *sign()* and (newly implemeted), *isValid()* methods.
+- [x] ***sign()***,
+    *   Takes the user's raw Private Key (in Hex format) and converts it into an OpenSSL `BIGNUM`.
+    *   Signs the SHA-256 hash of the transaction using the `secp256k1` curve.
+    *   Extracts the mathematical `r` and `s` components from the generated ECDSA signature.
+    *   Pads both `r` and `s` to exactly 64 characters to prevent parsing errors, concatenating them into a final **128-character hex string**.
+- [x] ***isValid()***,
+    *   **Sanity Checks:** Rejects empty addresses, zero/negative amounts, and invalid signature lengths (must be exactly 128 characters, representing 64 bytes or 512 bits).
+    *   **System Bypass:** Recognizes `"System"` as a valid sender without a signature to natively support Block Mining Rewards.
+    *   **Mathematical Proof:** Re-hashes the current transaction data and converts the `sender_addr` (which acts as the Public Key) back into an Elliptic Curve Point (`EC_POINT`). It then splits the 128-char signature back into `r` and `s`.
+    *   Uses `ECDSA_do_verify` to mathematically prove that the holder of the corresponding Private Key authorized this exact transaction hash.
+- [x] At last, each time we run the "network", a .log file appears (similar to the merklee.log) that shows us the privated and public keys of the invisible people that make the transactions. NOTE: that these transactions are not being saved anywhere nor these people have the same addresses when we rerun the "network" (30/4/2026). (to be implemeted later.)
+
+# Output of: 30/4/2026 (updated from above to permanently stay in codebase) .log file
+```
+=== WALLET: Seshy ===
+Private Key (SECRET) : AF22C74FEE285A7550B148A667D2633B33F6916C4330C66FEA6B3E4A25B665AC
+Public Key  (ADDRESS): 04A1F2C1763402C5B91DE878B92BAA535EC30EEB983232EFA4C21...128 chars in hex
+
+=== WALLET: Bob ===
+Private Key (SECRET) : FA29D90D04720EA52DE769C37B5156C4E2CA34FF5916793BD12F2254B605233C
+Public Key  (ADDRESS): 043434748F378A4654745FE6F96F2BBE6738CCDDCE2A63F7ADF36...128 chars in hex
+
+=== WALLET: Amy ===
+Private Key (SECRET) : E272D16F35A01EC9D82990B32708896E04654F80A966EAD4C86D6E8135271117
+Public Key  (ADDRESS): 0419BFB63532DF1CD58F2D3EBBA30ABC27D8CF98AF565DF114914...128 chars in hex
+.
+.
+.
+```
+
 
 # Output of: 18/2/2026
 ## using SHA-256:
