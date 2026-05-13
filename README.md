@@ -2,19 +2,7 @@
   <img src="finalBC.png" width="600" height="700">
 </p>
 
-# TODOS:
-1) make a diagram to connect: transactions/network/ledger etc...
-2) store the addresses and the transactions are "real"
-3) minting reward from blockmine
-
-# DONES:
-1) Signatures:
-    - read Theory, wrote READme
-2) *SOS* Signature verification (ECDSA)
-3) implement ECDSA in code, hands on
-
-
-# Very simple blockchain creation - tzak
+# Simple blockchain creation - Giorgos Sigioltzakis
 
 ## 1. mining a block
 from the files block.cpp/h:
@@ -110,9 +98,16 @@ Public Key  (ADDRESS): 0419BFB63532DF1CD58F2D3EBBA30ABC27D8CF98AF565DF114914...1
 .
 .
 ```
+---
+## Final touches for the "way-of-bank"
+1) Correct Mempool implementation in `blockchain.cpp` constructor. We will add/correct the current so: someone "sends" points to someone, first those point go to the mempool that we gather the *transactions*. So in the class Blockchain we will add a vector for pendingTransactions.
+2) Right now as of **12/5** when someone sends points, that goes through imidiatly without us knowing if that person has that amount or not. Here comes the *Signatures* and the isValid() function in `trans.h/cpp`. If the signature is true, the user has the amount, else not. So for that we need to have another new function in blockchain.cpp to `getBalance(address)`.
+3) In addition of the (2) above, we will also need t verify the transaction *before* the mining. So for that we will need to expand the addBlock() to see with each transaction (lets say a token tx), if tx.isValid() is true and if the balance of the sender >= amount. (because else he wont havee the points to send.)
+4) The "minting". We also need to expand even more the addBlock() so the **miner** takes the address of that person. So, in the end that person will be rewarded with X points.(lets say for each successfull mine -> 2.5 points)
 
+---
 
-# Output of: 18/2/2026
+## Output of: 18/2/2026
 ## using SHA-256:
 ```
 ./blockchain
@@ -132,7 +127,7 @@ Block Mined! Hash: 0000fc9423493e7c
 Is chain valid? Yes
 ```
 
-# Output of: 6/3/2026
+## Output of: 6/3/2026
 ```
 time ./al #instead of ./Blockchain, for ease
 Mining block[1]...
@@ -150,3 +145,52 @@ real    0m3.682s
 user    0m3.652s
 sys     0m0.021s
 ```
+
+# Output of 13/5/26:
+# FINAL skeleton output. A run of the whole blockchain. difficulty = 4 (for speed).
+### In `merkle_trees.log` is the tree visualation.
+```
+Mining block[1]...
+Block MINED with hash: 000024acbade235c18dbab0641cbc6fd87b5c8709a2dab98bf2b38a8006549dd4c4062cec01ba
+Mining block[2]...
+Block MINED with hash: 0000beaaf0ea8480ae09f6fd1739cbbff43dcfc6730ced0518eb72f6a4804aa989e0bf1972d2e
+Mining block[3]...
+Block MINED with hash: 000015bf8b0a768362aabe138b624afe7472f9fbbab41c2f025d1dd093f6c59f21d3b2578b5ec
+Mining block[4]...
+Block MINED with hash: 00000887bcd2bbbafd36b3a81951a0cbb558e58533d6eb46714deef98a677a695837e4c6e61d4
+-----------------------------------------------------------------
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+Mining block[5]...
+Block MINED with hash: 0000aa3ab0ba27f281fde49410138845355d30b07605ca1d033ab7b96e7ca696c1773585577c2
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+Mining block[6]...
+Block MINED with hash: 00009f60d985a0dd76a68f904216740a5b2179125b20a348e63d30808932a1546522e0c447e26
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+Mining block[7]...
+Block MINED with hash: 00003ee8606b52f99ec74db850a9014f2a08da1aac757355940a22aa3fc019ba17c4074a8d204
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+[MEMPOOL] Transaction added successfully!
+Mining block[8]...
+Block MINED with hash: 00000b2666c1476fd2cb69bacbf3737fa27457301a201d9ab3dcf5b27a0d83ee5c9a2884f00ad
+Valid chain: True
+Total minutes to mine (start->finish): 0.133333 minutes.
+```
+### Execution Analysis
+
+The final terminal output demonstrates the complete lifecycle of the blockchain's state machine and consensus rules:
+
+1. **Currency Issuance (Blocks 1-4):** The network initializes by mining four blocks with an empty mempool. This executes the system's sole minting mechanism, distributing the initial 50-coin block rewards to fund the primary participants.
+2. **State Verification & Mempool Queuing:** As users initiate transfers, the system mathematically verifies the ECDSA signatures and evaluates the senders' balances. The `[MEMPOOL] Transaction added successfully!` logs confirm the network successfully authorizes chained transactions using zero-confirmation mempool state logic.
+3. **Consensus & Finality (Blocks 5-8):** The engine processes the pending mempool transactions, computes the new Merkle Root, and executes the SHA-256 Proof of Work. Discovering the target hash (`0000...`) cryptographically locks the transactions and the new miner rewards into the ledger.
+4. **Integrity Validation:** The final `Valid chain: True` output verifies the structural integrity of the entire network, confirming that no block data has been tampered with and all cryptographic links (`prevHash`) are securely intact.
