@@ -2,7 +2,7 @@
 #include <openssl/ec.h>
 #include <openssl/obj_mac.h>
 #include <openssl/bn.h>
-#include <fstream>  // Απαραίτητο για τα αρχεία (logs)
+#include <fstream>
 
 Wallet::Wallet(const std::string& name) : ownerName(name) {
     EC_KEY* keyPair = EC_KEY_new_by_curve_name(NID_secp256k1);
@@ -19,7 +19,6 @@ Wallet::Wallet(const std::string& name) : ownerName(name) {
     this->publicKey = std::string(pubKeyHex);
 
     // --- LOGGING TO FILE ---
-    // Ανοίγουμε το αρχείο σε λειτουργία "append" (για να μην διαγράφει τα προηγούμενα)
     std::ofstream logFile("wallets.log", std::ios::app);
     if (logFile.is_open()) {
         logFile << "=== WALLET: " << this->ownerName << " ===\n";

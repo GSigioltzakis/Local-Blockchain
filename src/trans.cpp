@@ -67,7 +67,7 @@ std::string Transaction::sign(const std::string& privateKeyHex) {
 bool Transaction::isValid() const {
     if (sender_addr.empty() || recipient_addr.empty() || amount <= 0) return false;
     
-    if (sender_addr == "System") return true;
+    if (sender_addr == "System") return true; //"System" because it's the source of block rewards, which don't require signatures
 
     if (signature.length() != 128) { //128 hex chars = 64 bytes = 512 bits, which is the size of an ECDSA signature (r and s each 32 bytes)
         std::cerr << "Invalid signature length." << std::endl;

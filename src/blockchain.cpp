@@ -14,24 +14,66 @@ Blockchain::Blockchain() {
 
 
 /*
-    The addBlock function is responsible for adding a new block to the blockchain. It takes the data for the new block,
-    retrieves the hash of the last block to link it properly, creates a new block, mines it using the proof-of-work algorithm,
-    and finally adds it to the chain.
+    we will create 3 new methods:
+    1) getBalance(address) - to calculate the balance of a given address by iterating through all transactions in the chain.
+    2) addTransaction(tx) - to add a new transaction to the mempool (pending transactions list). This will also validate the 
+    transaction before adding.
+    3) minePendingTransactions(minerAddress) - to create a new block with all pending transactions, mine it, and add it to the chain.
 */
-void Blockchain::addBlock(const std::vector<Transaction>& txs) {
+double Blockchain::getBalance(const std::string& address) const {
+    double balance = 0.0;
+    for (const auto& block : _chain) {
+        for (const auto& tx : block.transactions) {
+            if (tx.getSender() == address) balance -= tx.getAmount(); 
+            if (tx.getRecipient() == address) balance += tx.getAmount(); 
+        }
+    }
+
+    //Calculate unconfirmed balance from Mempool (Future RAM/Cache Layer)
+    for (const auto& tx : _pendingTransactions) {
+        if (tx.getSender() == address) balance -= tx.getAmount(); 
+        if (tx.getRecipient() == address) balance += tx.getAmount(); 
+    }
+    return balance;
+}
+
+void Blockchain::addTransaction(const Transaction& tx) {
+    if (!tx.isValid()) {
+        std::cout << "[Declined] failed validation!" << std::endl;
+        return;
+    }
+    
+    if (tx.getSender() != "System") {
+        double currentBalance = getBalance(tx.getSender());
+        if (currentBalance < tx.getAmount()) {
+            std::cout << "[Declined] Insufficient balance! (Sending: " 
+                      << tx.getAmount() << " | Has: " << currentBalance << ")\n";
+            return;
+        }
+    }
+
+    _pendingTransactions.push_back(tx);
+    std::cout << "[MEMPOOL] Transaction added successfully!" << std::endl;
+}
+
+void Blockchain::minePendingTransactions(const std::string& minerAddress) {
+    Transaction rewardTx("System", minerAddress, 50.0, "Block Reward");
+    _pendingTransactions.push_back(rewardTx);
 
     std::string lastHash = _chain.back().hash;
-    Block newBlock(_chain.size(), txs, lastHash); //take it from the block constructor
+    Block newBlock(_chain.size(), _pendingTransactions, lastHash);
 
-    //mine: Proof of Work
     std::cout << "Mining block[" << newBlock.index << "]..." << std::endl;
     newBlock.mineBlock(_difficulty);
 
-    // After mining, push the block and print the Merkle tree once for visual inspection
     _chain.push_back(newBlock);
-    // print merkle visual for this newly mined block
     _chain.back().printMerkleTree();
+    
+    _pendingTransactions.clear();
 }
+
+
+
 
 bool Blockchain::isChainValid() const {
     for (size_t i = 1; i < _chain.size(); i++) {
