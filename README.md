@@ -41,15 +41,15 @@ From the files `trans.cpp` and `trans.h`:
 ## 4. Signature Verifications - ECDSA
 (small note: i use ECDSA signature and address generation instead of RSA only for the space (byte wise))
 Before implementing anything, must understand how the openssl library works. Ive generated a small test file to implement a single signature using various libraries from openssl. In general tho, the steps for a correct signature verifications are:
-1. We have: a constant *prime* number `n` and a generator point `G` (where G={x, y}). 
-2. From those two now we need to generate a: `privKey` and a `pubKey`. The *private key* is not that hard to create as with a mathimatical "formula" we generate it as a random integer in the range of [1, n-1]. The *public key* is a bit more complex because we add an extra step. To find the public key we must multiply the private key with the generator point G: **`pubKey = privKey * G`**. That is called EC point multiplication (EC:Elliptic Curve).
+1. We have: a constant *prime* number `n` and a generator point `G` (where $G=\{x, y\}$). 
+2. From those two now we need to generate a: `privKey` and a `pubKey`. The *private key* is not that hard to create as with a mathimatical "formula" we generate it as a random integer in the range of [1, n-1]. The *public key* is a bit more complex because we add an extra step. To find the public key we must multiply the private key with the generator point G: **$pubKey = privKey * G$**. That is called EC point multiplication (EC:Elliptic Curve).
 
 ---
 3. Now for the ECDSA sign we must:
-    - Using SHA256 calculate the message's hash, so we have **`h = hash(msg)`**
+    - Using SHA256 calculate the message's hash, so we have **$h = hash(msg)$**
     - In the range of [2, n-2] we find a random (secure lets say) **k** for calculating random point, signature proofs ect..., relative prime to n-1.
-    - Calculating the **R**andom point **R = k * G** (R is on the 'x' coordinate) -> **`r = R.x`**
-    - Calculating the signature proof: **`s = k^-1(h + r * privKey)(mod n)`**.
+    - Calculating the **R**andom point **$R = k * G$** //R is on the 'x' coordinate -> **$r = R.x$**
+    - Calculating the signature proof: **$s = k^-1(h + r * privKey)(modn)$**.
     - *The calculated signature {r, s} is a pair of integers, each in the range [1...n-1]. It encodes the random point R = k * G, along with a proof s, confirming that the signer knows the message h and the private key privKey. The proof s is by idea verifiable using the corresponding pubKey.*
     ### Signature verification
     - **Verification:** The network takes the $\{r, s\}$ pair, the message hash $h$, and the sender's pubKey. Using curve mathematics, the network reverses the operation to find the point $R$. If the $x$-coordinate of the recovered point matches the $r$ from the signature, it is verified as TRUE.
