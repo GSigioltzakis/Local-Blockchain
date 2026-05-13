@@ -8,16 +8,17 @@ class Blockchain {
 public:
     Blockchain();
 
-    void addBlock(const std::vector<Transaction>& txs);
+    void addTransaction(const Transaction& tx);
+    void minePendingTransactions(const std::string& minerAddress);
+    double getBalance(const std::string& address) const;
+
     bool isChainValid() const;
-    void printChain() const;
     double getMiningTime() const; 
 
 private:
     uint32_t _difficulty;
     std::vector<Block> _chain;
-
-    Block _getLatestBlock() const;
+    std::vector<Transaction> _pendingTransactions;//mempool
 };
 
 #endif
