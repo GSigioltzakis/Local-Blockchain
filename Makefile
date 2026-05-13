@@ -6,19 +6,19 @@ TARGET = al
 
 SRCS = src/main.cpp src/block.cpp src/blockchain.cpp src/trans.cpp src/merkle.cpp src/wallet.cpp
 
-OBJS = $(SRCS:.cpp=.o)
+OBJS = $(patsubst src/%.cpp, build/%.o, $(SRCS))
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
-# This pattern rule now handles files inside the src/ directory
-src/%.o: src/%.cpp
+build/%.o: src/%.cpp
+	@mkdir -p build
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET) merkle_trees.log wallets.log
+	rm -f build/*.o $(TARGET) merkle_trees.log wallets.log 
 
 run: all
 	./$(TARGET)
