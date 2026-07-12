@@ -1,25 +1,16 @@
 #include "../include/blockchain.h"
 #include <iostream>
+#include <cmath>
 
 
 
 Blockchain::Blockchain() {
-    _chain.emplace_back(Block(0, std::vector<Transaction>{}, "0")); //start with index 0 and a dummy previous hash of "0"
-/* 
-    Difficulty 4 means the hash must start with "0000", might change later due to cryptographic performance on different machines.
-    On a modern laptop, this takes < 1 second.
-*/
-    _difficulty = 4; //with difficulty 8, it takes around 10-20 seconds to mine a block.
+    _chain.emplace_back(Block(0, std::vector<Transaction>{}, "0")); // genesis block
+    _difficulty = 4;
+    _lastAdjustmentTime = _chain.back().timestamp; // start retarget window at genesis
 }
 
 
-/*
-    we will create 3 new methods:
-    1) getBalance(address) - to calculate the balance of a given address by iterating through all transactions in the chain.
-    2) addTransaction(tx) - to add a new transaction to the mempool (pending transactions list). This will also validate the 
-    transaction before adding.
-    3) minePendingTransactions(minerAddress) - to create a new block with all pending transactions, mine it, and add it to the chain.
-*/
 double Blockchain::getBalance(const std::string& address) const {
     double balance = 0.0;
     for (const auto& block : _chain) {
@@ -29,13 +20,14 @@ double Blockchain::getBalance(const std::string& address) const {
         }
     }
 
-    //Calculate unconfirmed balance from Mempool (Future RAM/Cache Layer)
+    // unconfirmed balance from mempool
     for (const auto& tx : _pendingTransactions) {
         if (tx.getSender() == address) balance -= tx.getAmount(); 
         if (tx.getRecipient() == address) balance += tx.getAmount(); 
     }
     return balance;
 }
+
 
 void Blockchain::addTransaction(const Transaction& tx) {
     if (!tx.isValid()) {
@@ -56,51 +48,127 @@ void Blockchain::addTransaction(const Transaction& tx) {
     std::cout << "[MEMPOOL] Transaction added successfully!" << std::endl;
 }
 
+
+// --- reward halving: reward halves every HALVING_INTERVAL blocks ---
+double Blockchain::getCurrentReward() const {
+    int halvings = _chain.size() / HALVING_INTERVAL;       // how many halvings so far
+    double reward = INITIAL_REWARD;
+    for (int i = 0; i < halvings; i++) {
+        reward /= 2.0;
+        if (reward < 0.0001) return 0.0;                   // negligible, also prevents infinite loop
+    }
+
+    // supply cap: count total minted so far (coinbase tx = sender "System")
+    double totalMinted = 0.0;
+    for (const auto& block : _chain) {
+        for (const auto& tx : block.transactions) {
+            if (tx.getSender() == "System")
+                totalMinted += tx.getAmount();
+        }
+    }
+    if (totalMinted + reward > MAX_SUPPLY)
+        return 0.0;                                        // cap reached, no more rewards
+
+    return reward;
+}
+
+
 void Blockchain::minePendingTransactions(const std::string& minerAddress) {
-    Transaction rewardTx("System", minerAddress, 50.0, "Block Reward");
-    _pendingTransactions.push_back(rewardTx);
+    // --- coinbase reward (halving-aware) ---
+    double reward = getCurrentReward();
+    if (reward > 0.0) {
+        Transaction rewardTx("System", minerAddress, reward, "Block Reward");
+        _pendingTransactions.insert(_pendingTransactions.begin(), rewardTx);
+    }
+
+    // --- mempool throttling: take at most MAX_TX_PER_BLOCK transactions (FIFO) ---
+    std::vector<Transaction> blockTxs;
+    size_t take = std::min(_pendingTransactions.size(), static_cast<size_t>(MAX_TX_PER_BLOCK));
+    for (size_t i = 0; i < take; i++) {
+        blockTxs.push_back(_pendingTransactions[i]);
+    }
 
     std::string lastHash = _chain.back().hash;
-    Block newBlock(_chain.size(), _pendingTransactions, lastHash);
+    Block newBlock(_chain.size(), blockTxs, lastHash);
+
+    // ensure strictly increasing timestamps (rapid mining in same second)
+    if (newBlock.timestamp <= _chain.back().timestamp)
+        newBlock.timestamp = _chain.back().timestamp + 1;
 
     std::cout << "Mining block[" << newBlock.index << "]..." << std::endl;
     newBlock.mineBlock(_difficulty);
 
     _chain.push_back(newBlock);
     _chain.back().printMerkleTree();
-    
-    _pendingTransactions.clear();
+
+    // --- remove mined transactions from mempool (leave the rest) ---
+    _pendingTransactions.erase(_pendingTransactions.begin(),
+                               _pendingTransactions.begin() + take);
+
+    // --- dynamic difficulty retargeting every ADJUSTMENT_INTERVAL blocks ---
+    if (_chain.size() % ADJUSTMENT_INTERVAL == 0 && _chain.size() > 1) {
+        time_t now          = newBlock.timestamp;
+        double timeTaken    = difftime(now, _lastAdjustmentTime);   // actual seconds for this window
+        double expected     = ADJUSTMENT_INTERVAL * TARGET_BLOCK_TIME;
+
+        if (timeTaken > 0.0) {
+            int oldDiff = _difficulty;
+            // scale difficulty: too fast -> harder, too slow -> easier
+            _difficulty = static_cast<uint32_t>(
+                std::round(_difficulty * expected / timeTaken)
+            );
+            if (_difficulty < 1) _difficulty = 1;                   // floor at 1
+
+            std::cout << "[RETARGET] difficulty " << oldDiff
+                      << " -> " << _difficulty
+                      << "  (window: " << timeTaken << "s, expected: " << expected << "s)\n";
+        }
+
+        _lastAdjustmentTime = now;  // start next window
+    }
 }
 
 
-
-
 bool Blockchain::isChainValid() const {
+    time_t now = std::time(nullptr);
+
     for (size_t i = 1; i < _chain.size(); i++) {
         const Block& currentBlock = _chain[i];
-        const Block& prevBlock = _chain[i - 1];
+        const Block& prevBlock    = _chain[i - 1];
 
-        //Has the data within the current block been changed?
+        // hash integrity
         if (currentBlock.hash != currentBlock.calculateHash()) {
             std::cout << "Invalid Hash at index " << i << std::endl;
             return false;
         }
 
-        //Does the current block properly point to the previous block?
+        // chain linkage
         if (currentBlock.prevHash != prevBlock.hash) {
             std::cout << "Chain link broken at index " << i << std::endl;
+            return false;
+        }
+
+        // --- timestamp validation ---
+        // must be strictly after previous block
+        if (currentBlock.timestamp <= prevBlock.timestamp) {
+            std::cout << "Timestamp out of order at index " << i << std::endl;
+            return false;
+        }
+        // must not be too far in the future (2-hour tolerance)
+        if (difftime(currentBlock.timestamp, now) > 2 * 3600) {
+            std::cout << "Timestamp too far in the future at index " << i << std::endl;
             return false;
         }
     }
     return true;
 }
 
+
 double Blockchain::getMiningTime() const {
     if (_chain.size() < 2) return 0.0;
 
-    // total time from genesis (index 0) to last block, in minutes
     const Block& first = _chain.front();
-    const Block& last = _chain.back();
+    const Block& last  = _chain.back();
     double totalSeconds = difftime(last.timestamp, first.timestamp);
     double totalMinutes = totalSeconds / 60.0;
     return totalMinutes;
